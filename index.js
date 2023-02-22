@@ -4,7 +4,6 @@ const fs = require("fs");
 const path = require("path");
 const { allPDFURL, outputPDFURL, outputTXTFile } = require("./config");
 
-
 const all = path.join(__dirname, allPDFURL);
 const shortlisted = path.join(__dirname, outputPDFURL);
 const outFile = path.join(__dirname, outputTXTFile);
@@ -18,7 +17,6 @@ const hasGithubText = (text) => {
     let matches = text.match("github.com/(.*)/?");
     if (matches) {
         let profileURL = "https://github.com/BOOMER".replace("BOOMER", matches[1]);
-        console.log(profileURL);
         return profileURL;
     }
 }
@@ -30,7 +28,7 @@ const shortListResume = (fileName) => {
 }
 
 const writeDataToFile = (data) => {
-    fs.appendFile(outFile, data, (err) => {
+    fs.writeFile(outFile, data, (err) => {
         if(err)
             console.log(err)
     });
@@ -47,15 +45,28 @@ fs.readdir(all, async (error, files) => {
         const data = await extractTextFromPdf(all);
         console.log("======>", file);
         for (let page of data.pages) {
-            for (let content of page.content) {
-                const profile = hasGithubText(content.str);
+            var foundLink = false;
+            console.log(page.links);
+            for(let link of page.links) {
+                const profile = hasGithubText(link);
                 if (profile) {
-                    fileContent += file + " ~ " + profile + "\t\n";
+                    fileContent += file + " ~ " + profile + "\n";
                     shortListResume(file);
+                    foundLink = true;
+                    break;
+                }
+            }
+            if(!foundLink) {
+                for (let content of page.content) {
+                    const profile = hasGithubText(content.str);
+                    if (profile) {
+                        fileContent += file + " ~ " + profile + "\n";
+                        shortListResume(file);
+                        break;
+                    }
                 }
             }
         }
     };
-    console.log(fileContent);
     writeDataToFile(fileContent);
 });
