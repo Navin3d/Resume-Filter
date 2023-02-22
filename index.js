@@ -50,7 +50,7 @@ fs.readdir(all, async (error, files) => {
             for (let content of page.content) {
                 const profile = hasGithubText(content.str);
                 if (profile) {
-                    fileContent += file + " ~ " + profile + "\t\n";
+                    fileContent += file + " ~ " + profile + "\n";
                     shortListResume(file);
                 }
             }
